@@ -1,92 +1,100 @@
-//global variables, can be accessed by all functions
-
-  //declare a variable named playerName that stores the value the player enters from a prompt
 let playerName = prompt("What is your name?")
-  //declare a variable named playerHealth and set it equal to the number value 15
-let playerHealth = 15
-  //assign a name of a monster (ex 'Werewolf') as a string to a variable named monsterName
-let monsterName = 'Ccapac Apu'
-  //declare a variable named monsterHealth and set it equal to the number value 15
-let monsterHealth = 15
-//random integer function 
-//see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
+
 function randomNum(min, max) {
-  //return a random integer between min - max
   min = Math.ceil(min)
   max = Math.floor(max)
-  return Math.floor(Math.random() * (max - min) + min) // The maximum is exclusive and the minimum is inclusive
+  return Math.floor(Math.random() * (max - min) + min)
 }
 
-function playerAttack(){
-//use randomNum to generate attack points value between 1 - 5 and save the value to a variable named playerAttackPoints
-let playerAttackPoints = randomNum(1, 6)
-//subtract playerAttackPoints from monsterHealth and update the monsterHealth variable
-monsterHealth = monsterHealth - playerAttackPoints
-alert(`${playerName} attacked ${monsterName}. You did ${playerAttackPoints} damage! The monster has ${monsterHealth} HP left.`)
-  //use an alert with string template literals to tell the player: 
-  // 1. player attacked monster 
-  // 2. how much damage the player did 
-  // 3. how much health the monster has 
+class Fighter {
+  constructor(name) {
+  this.name = name
+  this.healthPoints = 15
+  this.attackPoints = 0
+  }
+  attack(target) {
+    this.attackPoints = randomNum(1, 6)
+    target.healthPoints -= this.attackPoints
+    alert(`${this.name} attacked ${target.name} for ${this.attackPoints} damage! ${target.name} has ${target.healthPoints} HP remaining.`)
+  }
 }
 
-function monsterAttack(){
-  //use randomNum to generate attack points value between 1 - 5 and save the value to a variable named monsterAttackPoints
-let monsterAttackPoints = randomNum(1, 6)
-  //subtract monsterAttackPoints from playerHealth and update the playerHealth variable 
-playerHealth = playerHealth - monsterAttackPoints
-alert(`${monsterName} attacked ${playerName}. ${monsterName} did ${monsterAttackPoints} damage! ${playerName} has ${playerHealth} HP left.`)
-  //use an alert with string template literals to tell the player: 
-  // 1. monster attacked player 
-  // 2. how much damage the monster did 
-  // 3. how much health the player has 
+class Hero extends Fighter {
+  constructor(name, healthPoints) {
+    super(name, healthPoints)
+    this.shield = 0
+  }
+  engageArmor() {
+    this.healthPoints += 3
+    alert(`${this.name}'s shield allows them to withstand 3 more damage!`)
+  }
 }
 
-function playRound() {
-  //use randomNum to return either 0 or 1
+let player = new Hero(playerName)
+
+class Monster extends Fighter {
+  constructor(name, healthPoints) {
+    super(name, healthPoints)
+    this.charge = 0
+  }
+  enraged() {
+    this.attackPoints = 7
+    alert(`${this.name} is enraged! Their next attack will do 7 damage!`)
+  }
+  berserk(target) {
+    target.healthPoints -= this.attackPoints
+    alert(`${this.name} went berserk! They attacked ${target.name} for 7 damage! ${target.name} has ${target.healthPoints} HP remaining.`)
+  }
+}
+
+let monster = new Monster('Ganondorf')
+
+function playRound(player, monster) {
   let turn = randomNum(0, 2)
-  //0 = player goes first, 1 = monster goes first
   if (turn === 0) {
-    playerAttack()
-    if (monsterHealth > 0) {
-      monsterAttack()
+    player.attack(monster)
+    if (monster.healthPoints > 0) {
+      if (monster.charge === 2) {
+        monster.berserk(player)
+        monster.charge = 0
+      } else {
+        monster.charge++
+        monster.attack(player)
+        if (monster.charge === 2) {
+          monster.enraged()
+        }
+      }
     }
   } else {
-    monsterAttack()
-    if (playerHealth > 0) {
-      playerAttack()
+    if (monster.charge === 2) {
+      monster.berserk(player)
+      monster.charge = 0
+    } else {
+      monster.attack(player)
     }
-  }
-  //use if/else to determine who goes first
-  
-  //if player goes first, run playerAttack, then if monsterHealth > 0, run monsterAttack
-
-  //if monster goes first, run monsterAttack, then if playerHealth > 0, run playerAttack 
-}
-
-function playGame() {
-  //beginning game message
-  alert(
-    `Hello, ${playerName}! You are fighting ${monsterName}! Your health is at ${playerHealth}, ${monsterName}'s health is at ${monsterHealth}.`
-  );
-
- let roundNumber = 0
-
-  //while loop that runs until player or monster's health is <= 0 
-  //add the condition in the while loop parentheses 
-  while(playerHealth > 0 && monsterHealth > 0) {
-    roundNumber++
-   //write an alert statement that tells the player what round number it is, and the player's and monster's current health points
-    alert(`It is round #${roundNumber}. ${playerName} has ${playerHealth} HP, ${monsterName} has ${monsterHealth} HP.`)
-   //call playRound inside the while loop
-    playRound()
+    if (player.healthPoints > 0) {
+      player.shield++
+      player.attack(monster)
+      if (player.shield === 2) {
+        player.engageArmor()
+      }
+    }
   } 
-  if (monsterHealth <= 0) {
-    alert(`${monsterName} has no more HP remaining. ${playerName} wins! Congratulations.`)
-  } else if (playerHealth <= 0) {
-    alert(`${playerName} has no more HP remaining. ${monsterName} has vanquished you. The world is now doomed for eternal darkness. Thanks`)
-  }
-  //outside of while loop, declare a winner and use alert to show a win or lose message 
 }
 
-//call playGame to start game
-playGame()
+function playGame(player, monster) {
+  alert(`Hello, ${player.name}! You are fighting ${monster.name}! Your health is at ${player.healthPoints}, ${monster.name}'s health is at ${monster.healthPoints}.`);
+ let roundNumber = 0
+  while(player.healthPoints > 0 && monster.healthPoints > 0) {
+    roundNumber++
+    alert(`It is round #${roundNumber}. ${player.name} has ${player.healthPoints} HP, ${monster.name} has ${monster.healthPoints} HP.`)
+    playRound(player, monster)
+  if (monster.healthPoints <= 0) {
+    alert(`${monster.name} has no more HP remaining. ${player.name} wins! Congratulations.`)
+  } else if (player.healthPoints <= 0) {
+    alert(`${player.name} has no more HP remaining. ${monster.name} has vanquished you. The world is now doomed for eternal darkness. Thanks`)
+  }
+}
+}
+
+playGame(player, monster)
